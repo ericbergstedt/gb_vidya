@@ -37,51 +37,49 @@ void world_tick( void )
 
 void world_getJoyPad( void )
 {
-    joypad_value.joypad_val = joypad();
+    joypad_value.joypad_val |= joypad();
 }
 
+#define MOVE_SIZE 8
 void player_tick( worldBlock *pPlayer, joypad_input *pJoypad )
 {
     UINT8 JOY_VALUE = pJoypad->joypad_val;
-    int NEXT_Y = 0;
-    int NEXT_X = 0;
+    UINT8 NEXT_Y = 0;
+    UINT8 NEXT_X = 0;
 
-    if ( JOY_VALUE & J_UP )
+    switch ( JOY_VALUE )
     {
-        pPlayer->yVel = -2;
+        case (J_UP):
+            pPlayer->yVel = -MOVE_SIZE;
+            pPlayer->xVel = 0;
+            break;
+        case (J_DOWN):
+            pPlayer->yVel = MOVE_SIZE;
+            pPlayer->xVel = 0;
+            break;
+        case (J_RIGHT):
+            pPlayer->xVel = MOVE_SIZE;
+            pPlayer->yVel = 0;
+            break;
+        case (J_LEFT):
+            pPlayer->xVel = -MOVE_SIZE;
+            pPlayer->yVel = 0;
+            break;
     }
-    else if ( JOY_VALUE & J_DOWN )
-    {
-        pPlayer->yVel = 2;
-    }
-    else
-        pPlayer->yVel = 0;
 
-    if ( JOY_VALUE & J_RIGHT )
-    {
-        pPlayer->xVel = 2;
-    }
-    else if ( JOY_VALUE & J_LEFT )
-    {
-        pPlayer->xVel = -2;
-    }
-    else
-        pPlayer->xVel = 0;
+    disable_interrupts();
+    joypad_value.joypad_val = 0;
+    enable_interrupts();
 
-    NEXT_Y = (pPlayer->y + pPlayer->yVel);
-    NEXT_X = (pPlayer->x + pPlayer->xVel);
+    NEXT_Y = ((UINT8)pPlayer->y + (UINT8)pPlayer->yVel);
+    NEXT_X = ((UINT8)pPlayer->x + (UINT8)pPlayer->xVel);
 
-    if ( MINWNDPOSY <= NEXT_Y && NEXT_Y <= MAXWNDPOSY )
+
+    if ( 16 <= NEXT_Y && NEXT_Y <= 152 )
         pPlayer->y += pPlayer->yVel;
-    else if ( MINWNDPOSY <= NEXT_Y )
-        pPlayer->y = MINWNDPOSY;
-    else if ( MAXWNDPOSY >= NEXT_Y )
-        pPlayer->y = MAXWNDPOSY;
-    
-    if ( MINWNDPOSX <= NEXT_X && NEXT_X <= MAXWNDPOSX )
+
+    if ( 8 <= NEXT_X && NEXT_X <= 160 )
         pPlayer->x += pPlayer->xVel;
-    else if ( MINWNDPOSX <= NEXT_X )
-        pPlayer->x = MINWNDPOSX;
-    else if ( MAXWNDPOSX >= NEXT_X )
-        pPlayer->x = MAXWNDPOSX;
+
+    //printf("X: %u Y: %u\n", (unsigned int)NEXT_X, (unsigned int)NEXT_Y);
 }

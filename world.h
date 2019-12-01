@@ -6,10 +6,10 @@
 
 typedef struct world_block_ {
     UINT8 spriteID;
-    int x;
-    int y;
-    int xVel;
-    int yVel;
+    UINT8 x;
+    UINT8 y;
+    UINT8 xVel;
+    UINT8 yVel;
 } worldBlock;
 
 

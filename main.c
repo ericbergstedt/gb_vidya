@@ -40,7 +40,7 @@ void print_counter()
   cnt = tim_cnt;
   enable_interrupts();
 
-   if ( cnt >= 4  )
+   if ( cnt >= 16  )
    {
       disable_interrupts();
       tim_cnt = 0;
