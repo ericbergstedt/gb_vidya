@@ -1,10 +1,11 @@
 #include "world.h"
 
-#include "loadMem.h"
 
 worldBlock player1;
 
 joypad_input joypad_value;
+
+BYTE isDEAD = 0;
 
 void player_tick( worldBlock *pPlayer, joypad_input *pJoypad );
 
@@ -13,29 +14,60 @@ void world_init( void )
     loadMem_init();
 
     player1.spriteID = 0;
-    player1.x = 8;
-    player1.y = 16;
+    player1.x = 8*10;
+    player1.y = 8*9;
+    player1.xAnim = player1.x;
+    player1.yAnim = player1.y;
+    player1.anim_step = 1;
 
     joypad_value.joypad_val = 0;
 
     SHOW_SPRITES;
+    move_sprite( player1.spriteID, (UINT8)player1.x, (UINT8)player1.y );
 }
 
 void world_draw( void )
 {
-    move_sprite( player1.spriteID, (UINT8)player1.x, (UINT8)player1.y );
-    
+    UINT8 X = 0;
+    UINT8 Y = 0;
+
+    if ( player1.xAnim != player1.x || player1.yAnim != player1.y )
+    {
+        if ( player1.x > player1.xAnim )
+        {
+            player1.xAnim += player1.anim_step;
+            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) | S_FLIPX );
+        }
+        else if ( player1.x < player1.xAnim )
+        {
+            player1.xAnim -= player1.anim_step;
+            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) & ~S_FLIPY );
+        }
+        
+        if ( player1.y > player1.yAnim )
+        {
+            player1.yAnim += player1.anim_step;
+
+            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) | S_FLIPY );
+        }
+        else if ( player1.y < player1.yAnim )
+        {
+            player1.yAnim -= player1.anim_step;
+            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) & ~S_FLIPY );
+        }
+
+        move_sprite( player1.spriteID, (UINT8)player1.xAnim, (UINT8)player1.yAnim );
+    }
 }
 
 
 void world_tick( void )
 {
-    world_getJoyPad();
     player_tick( &player1, &joypad_value );
 }
 
 
-void world_getJoyPad( void )
+void world_setJoyPad( UBYTE joypadVal )
 {
     joypad_value.joypad_val |= joypad();
 }

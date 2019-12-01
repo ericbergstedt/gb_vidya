@@ -1,6 +1,6 @@
 /*
 
- GAMESPRITES.H
+ GAMETITLES.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 0
+  Tiles                : 0 to 12
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define blockBank 0
+#define gameTitlesBank 0
 /* Start of tile array. */
-extern unsigned char block[];
+extern unsigned char gameTitles[];
 
-/* End of GAMESPRITES.H */
+/* End of GAMETITLES.H */

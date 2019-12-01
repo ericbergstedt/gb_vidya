@@ -1,7 +1,8 @@
 #ifndef LOADMEM__
 #define LOADMEM__
 
-#include "gameSprites.h"
+#include "gameTitles.h"
+#include "gameBG.h"
 
 
 void loadMem_init( void );

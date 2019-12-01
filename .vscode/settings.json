@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "world.h": "c",
-        "gamesprites.h": "c"
+        "gamesprites.h": "c",
+        "gametitles.h": "c"
     }
 }

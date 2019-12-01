@@ -10,7 +10,7 @@
 
 #include "world.h"
 
-volatile UBYTE vbl_cnt, tim_cnt, joy_val;
+volatile UBYTE vbl_cnt, tim_cnt, joy_active;
 
 
 void vbl()
@@ -27,37 +27,65 @@ void tim()
 
 void joy()
 {
-  joy_val = joypad();
+  joy_active++;
 }
 
 void print_counter()
 {
+  static UBYTE cnt_last = 0;
+  static UBYTE cntDraw = 0;
+
+  //static UBYTE lastJoypad = 0;
+
   UBYTE cnt = 0;
+  UBYTE joypad_get = 0;
   UINT8 worldDraw = 0;
 
   /* Ensure mutual exclusion (not really necessary in this example)... */
   disable_interrupts();
   cnt = tim_cnt;
+  joypad_get = joy_active;
   enable_interrupts();
 
-   if ( cnt >= 16  )
-   {
-      disable_interrupts();
-      tim_cnt = 0;
-      enable_interrupts();
-      worldDraw = 1;
-   }
+  if ( joypad_get != 0 )
+  {
+    world_setJoyPad( 0 );
+    //printf("BTN: %u\n", (unsigned int)joypad());
+  }
 
-   if ( cnt % 2  )
-   {
-      world_getJoyPad();
-   }
+  if ( cnt != cnt_last )
+  {
+    cnt_last = cnt;
+    cntDraw++;
+    
 
-   if ( worldDraw > 0 )
-   {
-      world_tick();
-      world_draw();
-   }
+    /* interrupt based user input is just going to have to wait for now
+    if ( joypad != lastJoypad )
+    {
+      world_setJoyPad(joypad);
+      lastJoypad = joypad;
+    }
+    */
+  }
+
+  if ( cnt >= 16  )
+  {
+    disable_interrupts();
+    tim_cnt = 0;
+    enable_interrupts();
+    worldDraw = 1;
+  }
+
+  if ( worldDraw > 0 )
+  {
+    world_tick();
+  }
+
+  if ( cntDraw >= 1  )
+  {
+    world_draw();
+    cntDraw = 0;
+  }
   
 
   /* Ensure mutual exclusion (not really necessary in this example)... */
@@ -75,7 +103,7 @@ void main()
   vbl_cnt = tim_cnt = 0;
   add_VBL(vbl);
   add_TIM(tim);
-  //add_JOY(joy);
+  add_JOY(joy);
   enable_interrupts();
 
   /* Set TMA to divide clock by 128 */
@@ -86,13 +114,15 @@ void main()
 
 
   /* Handle VBL and TIM interrupts */
-  //set_interrupts( VBL_IFLAG | TIM_IFLAG | JOY_IFLAG );
-  set_interrupts( VBL_IFLAG | TIM_IFLAG );
+  set_interrupts( VBL_IFLAG | TIM_IFLAG | JOY_IFLAG );
+  //set_interrupts( VBL_IFLAG | TIM_IFLAG );
 
 
   world_init();
+  world_draw();
 
   while(1) {
     print_counter();
+    wait_vbl_done();
   }
 }

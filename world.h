@@ -10,6 +10,10 @@ typedef struct world_block_ {
     UINT8 y;
     UINT8 xVel;
     UINT8 yVel;
+
+    UINT8 xAnim;
+    UINT8 yAnim;
+    UINT8 anim_step;
 } worldBlock;
 
 
@@ -25,5 +29,5 @@ void world_tick( void );
 // draw game
 void world_draw( void );
 
-void world_getJoyPad( void );
+void world_setJoyPad( UBYTE joypadVal );
 
