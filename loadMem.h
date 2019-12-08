@@ -7,6 +7,8 @@
 
 void loadMem_init( void );
 
+void loadMem_setTile( BYTE x , BYTE y, BYTE tile );
+
 #endif
 
 

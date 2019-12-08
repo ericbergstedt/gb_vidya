@@ -2,6 +2,7 @@
     "files.associations": {
         "world.h": "c",
         "gamesprites.h": "c",
-        "gametitles.h": "c"
+        "gametitles.h": "c",
+        "loadmem.h": "c"
     }
 }

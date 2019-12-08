@@ -38,7 +38,7 @@ void print_counter()
   //static UBYTE lastJoypad = 0;
 
   UBYTE cnt = 0;
-  UBYTE joypad_get = 0;
+  UBYTE joypad_get = 0x00;
   UINT8 worldDraw = 0;
 
   /* Ensure mutual exclusion (not really necessary in this example)... */
@@ -47,10 +47,13 @@ void print_counter()
   joypad_get = joy_active;
   enable_interrupts();
 
-  if ( joypad_get != 0 )
+  if ( joypad_get != 0x00 )
   {
-    world_setJoyPad( 0 );
-    //printf("BTN: %u\n", (unsigned int)joypad());
+    joypad_get = joypad();
+    world_setJoyPad( joypad_get );
+    disable_interrupts();
+    joy_active = 0;
+    enable_interrupts();
   }
 
   if ( cnt != cnt_last )
@@ -103,7 +106,7 @@ void main()
   vbl_cnt = tim_cnt = 0;
   add_VBL(vbl);
   add_TIM(tim);
-  add_JOY(joy);
+  //add_JOY(joy);
   enable_interrupts();
 
   /* Set TMA to divide clock by 128 */
@@ -114,8 +117,8 @@ void main()
 
 
   /* Handle VBL and TIM interrupts */
-  set_interrupts( VBL_IFLAG | TIM_IFLAG | JOY_IFLAG );
-  //set_interrupts( VBL_IFLAG | TIM_IFLAG );
+  //set_interrupts( VBL_IFLAG | TIM_IFLAG | JOY_IFLAG );
+  set_interrupts( VBL_IFLAG | TIM_IFLAG );
 
 
   world_init();
@@ -124,5 +127,6 @@ void main()
   while(1) {
     print_counter();
     wait_vbl_done();
+    world_setJoyPad( joypad() );
   }
 }
