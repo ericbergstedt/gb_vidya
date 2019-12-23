@@ -4,5 +4,6 @@
         "gamesprites.h": "c",
         "gametitles.h": "c",
         "loadmem.h": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

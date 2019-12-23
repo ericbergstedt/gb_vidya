@@ -1,8 +1,9 @@
 #include "world.h"
 
 #include <string.h>
+#include <rand.h>
 
-worldBlock player1;
+character player1;
 
 joypad_input joypad_value;
 
@@ -10,23 +11,25 @@ BYTE isDEAD = 0;
 
 const char blankmap = 0x00;
 
-BYTE player_tick( worldBlock *pPlayer, joypad_input *pJoypad );
-BYTE player_checkCollision( worldBlock *pPlayer );
+BYTE player_tick( character *pPlayer, joypad_input *pJoypad );
+BYTE player_checkCollision( character *pPlayer );
+void world_restart( void );
+
+void world_setApple( void );
 
 void world_init( void )
 {
     loadMem_init();
 
-    player1.spriteID = 0;
-    player1.x = 8*10;
-    player1.y = 8*9;
-    player1.xAnim = 8*10;
-    player1.yAnim = 8*9;
-    player1.anim_step = 1;
+    player1.drawData.spriteID = 0;
+    player1.drawData.x = 8*10;
+    player1.drawData.y = 8*9;
+    player1.drawData.xAnim = 8*10;
+    player1.drawData.yAnim = 8*9;
+    player1.drawData.anim_step = 1;
 
     joypad_value.joypad_val = 0;
     SHOW_SPRITES;
-    
 }
 
 void world_draw( void )
@@ -39,62 +42,92 @@ void world_draw( void )
     {
         firstTick = 1;
         set_sprite_tile( 0, 1 );
-        move_sprite( player1.spriteID, (UINT8)player1.xAnim, (UINT8)player1.yAnim );
+        move_sprite( player1.drawData.spriteID, (UINT8)player1.drawData.xAnim, (UINT8)player1.drawData.yAnim );
     }
 
-    if ( player1.xAnim != player1.x || player1.yAnim != player1.y )
+    if ( player1.drawData.xAnim != player1.drawData.x || player1.drawData.yAnim != player1.drawData.y )
     {
-        if ( player1.x > player1.xAnim )
+        if ( player1.drawData.x > player1.drawData.xAnim )
         {
-            set_sprite_tile( 0, 13 );
-            player1.xAnim += player1.anim_step;
-            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) & ~S_FLIPX );
+            set_sprite_tile( 0, 1);
+            player1.drawData.xAnim += player1.drawData.anim_step;
+            set_sprite_prop( player1.drawData.spriteID, get_sprite_prop(player1.drawData.spriteID) & ~S_FLIPX );
         }
-        else if ( player1.x < player1.xAnim )
+        else if ( player1.drawData.x < player1.drawData.xAnim )
         {
-            set_sprite_tile( 0, 13 );
-            player1.xAnim -= player1.anim_step;
-            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) | S_FLIPX );
+            set_sprite_tile( 0, 1 );
+            player1.drawData.xAnim -= player1.drawData.anim_step;
+            set_sprite_prop( player1.drawData.spriteID, get_sprite_prop(player1.drawData.spriteID) | S_FLIPX );
         }
         
-        if ( player1.y > player1.yAnim )
+        if ( player1.drawData.y > player1.drawData.yAnim )
         {
             set_sprite_tile( 0, 1 );
-            player1.yAnim += player1.anim_step;
-            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) | S_FLIPY );
+            player1.drawData.yAnim += player1.drawData.anim_step;
+            set_sprite_prop( player1.drawData.spriteID, get_sprite_prop(player1.drawData.spriteID) | S_FLIPY );
         }
-        else if ( player1.y < player1.yAnim )
+        else if ( player1.drawData.y < player1.drawData.yAnim )
         {
             set_sprite_tile( 0, 1 );
-            player1.yAnim -= player1.anim_step;
-            set_sprite_prop( player1.spriteID, get_sprite_prop(player1.spriteID) & ~S_FLIPY );
+            player1.drawData.yAnim -= player1.drawData.anim_step;
+            set_sprite_prop( player1.drawData.spriteID, get_sprite_prop(player1.drawData.spriteID) & ~S_FLIPY );
         }
 
-        move_sprite( player1.spriteID, (UINT8)player1.xAnim, (UINT8)player1.yAnim );
+        move_sprite( player1.drawData.spriteID, (UINT8)player1.drawData.xAnim, (UINT8)player1.drawData.yAnim );
     }
 }
 
+void world_setApple( void )
+{
+    INT16 randX = (rand() * (UINT16)gameBgWidth) / (char)0xFF;
+    INT16 randY = (rand() * (UINT16)gameBgHeight) / (char)0xFF;
+
+    while( 1 )
+    {
+        if ( gameBg[ randX * randY ] = 0x00 )
+        {
+            gameBg[ randX * randY ] = 14;
+            break;
+        }
+        else
+        {
+            randX = (rand() * gameBgWidth) / (char)0xFF;
+            randY = (rand() * gameBgWidth) / (char)0xFF;
+        }
+        
+    }
+}
+
+void world_restart( void )
+{
+    loadMem_clearAllTileID( 0x02 );
+}
 
 void world_tick( void )
 {
-    BYTE x = player1.x;
-    BYTE y = player1.y;
+    BYTE x = player1.drawData.x;
+    BYTE y = player1.drawData.y;
 
     if ( player_tick( &player1, &joypad_value ) )
     {
         loadMem_setTile( x , y, 0x02 );
+    }
+    else 
+    {
+        // reload the world
+        world_restart();
     }
 }
 
 
 void world_setJoyPad( UBYTE joypadVal )
 {
-    joypad_value.joypad_val |= joypadVal;
+    joypad_value.joypad_val = joypadVal;
 }
 
 
 #define MOVE_SIZE 8
-BYTE player_tick( worldBlock *pPlayer, joypad_input *pJoypad )
+BYTE player_tick( character *pPlayer, joypad_input *pJoypad )
 {
     UINT8 JOY_VALUE = pJoypad->joypad_val;
     UINT8 NEXT_Y = 0;
@@ -104,56 +137,46 @@ BYTE player_tick( worldBlock *pPlayer, joypad_input *pJoypad )
     switch ( JOY_VALUE )
     {
         case (J_UP):
-            pPlayer->yVel = -MOVE_SIZE;
-            pPlayer->xVel = 0;
+            pPlayer->drawData.yVel = -MOVE_SIZE;
+            pPlayer->drawData.xVel = 0;
             break;
         case (J_DOWN):
-            pPlayer->yVel = MOVE_SIZE;
-            pPlayer->xVel = 0;
+            pPlayer->drawData.yVel = MOVE_SIZE;
+            pPlayer->drawData.xVel = 0;
             break;
         case (J_RIGHT):
-            pPlayer->xVel = MOVE_SIZE;
-            pPlayer->yVel = 0;
+            pPlayer->drawData.xVel = MOVE_SIZE;
+            pPlayer->drawData.yVel = 0;
             break;
         case (J_LEFT):
-            pPlayer->xVel = -MOVE_SIZE;
-            pPlayer->yVel = 0;
+            pPlayer->drawData.xVel = -MOVE_SIZE;
+            pPlayer->drawData.yVel = 0;
             break;
     }
 
-    joypad_value.joypad_val = 0;
+    //joypad_value.joypad_val = 0;
 
-    NEXT_Y = ((UINT8)pPlayer->y + (UINT8)pPlayer->yVel);
-    NEXT_X = ((UINT8)pPlayer->x + (UINT8)pPlayer->xVel);
+    ret = player_checkCollision( pPlayer );
 
-    if ( 40 <= NEXT_Y && NEXT_Y <= 128 )
-    {
-        pPlayer->y += pPlayer->yVel;
-        ret |= 0x01;
-    }
-
-    if ( 32 <= NEXT_X && NEXT_X <= 136 )
-    {
-        pPlayer->x += pPlayer->xVel;
-        ret |= 0x02;
-    }
-
-    
-
-/*
-    if ( 16 <= NEXT_Y && NEXT_Y <= 152 )
-        pPlayer->y += pPlayer->yVel;
-
-    if ( 8 <= NEXT_X && NEXT_X <= 160 )
-        pPlayer->x += pPlayer->xVel;
-*/
-    //printf("X: %u Y: %u\n", (unsigned int)NEXT_X, (unsigned int)NEXT_Y);
     return ret;
 }
 
-BYTE player_checkCollision( worldBlock *pPlayer )
+BYTE player_checkCollision( character *pPlayer )
 {
+    BYTE ret = 0;
+    UINT8 NEXT_Y = ((UINT8)pPlayer->drawData.y + (UINT8)pPlayer->drawData.yVel);
+    UINT8 NEXT_X = ((UINT8)pPlayer->drawData.x + (UINT8)pPlayer->drawData.xVel);
 
+    if ( pPlayer != 0 )
+    {
+        if ( loadMem_getTile( NEXT_X, NEXT_Y ) == TILE_EMPTY )
+        {
+            ret = 0x01;
+            pPlayer->drawData.y += pPlayer->drawData.yVel;
+            pPlayer->drawData.x += pPlayer->drawData.xVel;
+        }
+    }
 
+    return ret;
 }
 
